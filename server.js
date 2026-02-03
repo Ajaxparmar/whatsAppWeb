@@ -148,7 +148,6 @@ const socketIo = require('socket.io');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const cors = require('cors');
-const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -164,29 +163,14 @@ const io = socketIo(server, {
 app.use(express.json());
 app.use(express.static('public'));
 
-// ── Find Chrome executable ────────────────────────────────
-// Render installs Chrome via puppeteer into a cache path.
-// This scans known locations to find the actual binary.
-function getChromePath() {
-    if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
-
-    const possiblePaths = [
-        '/opt/render/.cache/puppeteer/chrome/linux/chrome-linux64/chrome',
-        '/opt/render/.cache/puppeteer/chrome/linux/chrome-linux/chrome',
-        '/usr/bin/google-chrome',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/chromium',
-    ];
-
-    for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-            console.log('Chrome found at:', p);
-            return p;
-        }
-    }
-
-    console.log('Chrome not found in known paths — letting Puppeteer auto-detect.');
-    return undefined;
+// ── Get Chrome path from Puppeteer itself ─────────────────
+// This is the ONLY reliable method. It asks the installed
+// puppeteer package where IT put Chrome. No guessing paths.
+async function getChromePath() {
+    const puppeteer = require('puppeteer');
+    const path = await puppeteer.executablePath();
+    console.log('Chrome path resolved to:', path);
+    return path;
 }
 
 // ── State ─────────────────────────────────────────────────
@@ -195,8 +179,8 @@ let isReady = false;
 let qrCodeData = null;
 
 // ── Initialize WhatsApp ───────────────────────────────────
-function initializeWhatsApp() {
-    const chromePath = getChromePath();
+async function initializeWhatsApp() {
+    const chromePath = await getChromePath();
 
     client = new Client({
         authStrategy: new LocalAuth({
