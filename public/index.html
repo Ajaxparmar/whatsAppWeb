@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Gateway</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --accent: #00ff88;
+            --accent-dim: #00aa55;
+            --error: #ff3366;
+            --border: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 136, 0.03) 2px,
+                    rgba(0, 255, 136, 0.03) 4px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent) 0%, #00ffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s ease;
+        }
+
+        .card.active::before {
+            transform: scaleX(1);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.ready {
+            background: var(--accent);
+        }
+
+        .status-dot.error {
+            background: var(--error);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .qr-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .qr-code {
+            max-width: 280px;
+            width: 100%;
+            height: auto;
+            border: 4px solid var(--accent);
+            padding: 1rem;
+            background: white;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .status-message.ready {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+        }
+
+        .btn:not(:disabled):hover {
+            background: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:not(:disabled):active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .response {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-left: 4px solid var(--accent);
+            background: var(--bg-primary);
+            font-size: 0.75rem;
+            line-height: 1.6;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .response.error {
+            border-left-color: var(--error);
+            color: var(--error);
+        }
+
+        .response.success {
+            border-left-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .api-docs {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            padding: 2rem;
+            margin-top: 2rem;
+            animation: fadeIn 1s ease-out 0.5s both;
+        }
+
+        .api-docs h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .code-block {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 0.75rem;
+            overflow-x: auto;
+            white-space: pre;
+            color: var(--accent);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shimmer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.1),
+                    transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            to {
+                left: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo shimmer">WA/GATEWAY</div>
+            <div class="subtitle">WhatsApp Message API</div>
+        </div>
+
+        <div class="grid">
+            <!-- QR Code Section -->
+            <div class="card" id="qrCard">
+                <div class="card-title">
+                    <span class="status-dot" id="statusDot"></span>
+                    Connection Status
+                </div>
+                <div class="qr-container" id="qrContainer">
+                    <div class="status-message" id="statusMessage">
+                        <div class="loader"></div>
+                        <p style="margin-top: 1rem;">Initializing WhatsApp...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Send Message Section -->
+            <div class="card" id="sendCard">
+                <div class="card-title">Send Message</div>
+                <form id="messageForm">
+                    <div class="form-group">
+                        <label for="number">Phone Number</label>
+                        <input type="text" id="number" placeholder="+917201000220" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" placeholder="Type your message here..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn" id="sendBtn" disabled>
+                        <span id="btnText">Waiting for WhatsApp...</span>
+                    </button>
+                </form>
+                <div id="response"></div>
+            </div>
+        </div>
+
+        <!-- API Documentation -->
+        <div class="api-docs">
+            <h3>API Endpoint Documentation</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                Use this API endpoint to send WhatsApp messages programmatically:
+            </p>
+
+            <strong>Endpoint:</strong>
+            <div class="code-block">POST http://localhost:3000/api/send-message</div>
+
+            <strong>Headers:</strong>
+            <div class="code-block">Content-Type: application/json</div>
+
+            <strong>Request Body:</strong>
+            <div class="code-block">{
+                "number": "+917201000220",
+                "message": "Your message here"
+                }</div>
+
+            <strong>Example cURL:</strong>
+            <div class="code-block">curl -X POST http://localhost:3000/api/send-message \
+                -H "Content-Type: application/json" \
+                -d '{
+                "number": "+917201000220",
+                "message": "Hello from API!"
+                }'</div>
+
+            <strong>Response (Success):</strong>
+            <div class="code-block">{
+                "success": true,
+                "message": "Message sent successfully",
+                "to": "+917201000220"
+                }</div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const qrContainer = document.getElementById('qrContainer');
+        const statusMessage = document.getElementById('statusMessage');
+        const statusDot = document.getElementById('statusDot');
+        const qrCard = document.getElementById('qrCard');
+        const sendCard = document.getElementById('sendCard');
+        const sendBtn = document.getElementById('sendBtn');
+        const btnText = document.getElementById('btnText');
+        const responseDiv = document.getElementById('response');
+        const messageForm = document.getElementById('messageForm');
+
+        let isReady = false;
+
+        // Handle QR code reception
+        socket.on('qr', (qrData) => {
+            qrContainer.innerHTML = `<img src="${qrData}" alt="QR Code" class="qr-code">`;
+            statusMessage.innerHTML = '<p>Scan this QR code with WhatsApp</p>';
+            statusDot.className = 'status-dot';
+            qrCard.classList.remove('active');
+        });
+
+        // Handle status updates
+        socket.on('status', (data) => {
+            console.log('Status:', data);
+
+            if (data.status === 'ready') {
+                isReady = true;
+                qrContainer.innerHTML = '';
+                statusMessage.innerHTML = `<p class="ready">✓ ${data.message}</p>`;
+                statusMessage.className = 'status-message ready';
+                statusDot.className = 'status-dot ready';
+                qrCard.classList.add('active');
+                sendCard.classList.add('active');
+                sendBtn.disabled = false;
+                btnText.textContent = 'Send Message';
+            } else if (data.status === 'authenticated') {
+                statusMessage.innerHTML = `<p>✓ ${data.message}<br>Preparing client...</p>`;
+                statusDot.className = 'status-dot ready';
+            } else if (data.status === 'auth_failure') {
+                statusMessage.innerHTML = `<p style="color: var(--error);">✗ ${data.message}</p>`;
+                statusDot.className = 'status-dot error';
+            } else if (data.status === 'disconnected') {
+                isReady = false;
+                statusMessage.innerHTML = `<p style="color: var(--error);">✗ ${data.message}</p>`;
+                statusDot.className = 'status-dot error';
+                sendBtn.disabled = true;
+                btnText.textContent = 'Waiting for WhatsApp...';
+                qrCard.classList.remove('active');
+                sendCard.classList.remove('active');
+            }
+        });
+
+        // Handle form submission
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!isReady) {
+                showResponse('WhatsApp is not ready yet. Please scan the QR code first.', 'error');
+                return;
+            }
+
+            const number = document.getElementById('number').value;
+            const message = document.getElementById('message').value;
+
+            sendBtn.disabled = true;
+            btnText.textContent = 'Sending...';
+            responseDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/send-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ number, message })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResponse(`✓ Message sent successfully to ${data.to}`, 'success');
+                    document.getElementById('message').value = '';
+                } else {
+                    showResponse(`✗ Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showResponse(`✗ Error: ${error.message}`, 'error');
+            } finally {
+                sendBtn.disabled = false;
+                btnText.textContent = 'Send Message';
+            }
+        });
+
+        function showResponse(message, type) {
+            responseDiv.innerHTML = `<div class="response ${type}">${message}</div>`;
+        }
+
+        // Connection status
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+    </script>
+</body>
+
+</html>
