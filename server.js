@@ -20,17 +20,18 @@ function initializeWhatsApp() {
     client = new Client({
         authStrategy: new LocalAuth(),
         puppeteer: {
-            headless: "new",
-            args: [
-              "--no-sandbox",
-              "--disable-setuid-sandbox",
-              "--disable-dev-shm-usage",
-              "--disable-gpu"
-            ]
-          }
-          
-    });
-
+          headless: true,
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome',
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--single-process'
+          ]
+        }
+      });
+      
     client.on('qr', async (qr) => {
         console.log('QR Code received');
         try {
