@@ -23,16 +23,15 @@ function initializeWhatsApp() {
         authStrategy: new LocalAuth(),
         puppeteer: {
           headless: true,
-          executablePath: puppeteer.executablePath(),
           args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--single-process'
+            '--disable-gpu'
           ]
         }
       });
+      
       
       
     client.on('qr', async (qr) => {
