@@ -3,6 +3,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
+const puppeteer = require('puppeteer');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -21,7 +23,7 @@ function initializeWhatsApp() {
         authStrategy: new LocalAuth(),
         puppeteer: {
           headless: true,
-          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome',
+          executablePath: puppeteer.executablePath(),
           args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -31,6 +33,7 @@ function initializeWhatsApp() {
           ]
         }
       });
+      
       
     client.on('qr', async (qr) => {
         console.log('QR Code received');
