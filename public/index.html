@@ -452,31 +452,44 @@
             </p>
 
             <strong>Endpoint:</strong>
-            <div class="code-block">POST http://localhost:3000/api/send-message</div>
+            <div class="code-block">GET http://localhost:3000/api/send</div>
 
-            <strong>Headers:</strong>
-            <div class="code-block">Content-Type: application/json</div>
+            <strong>Query Parameters:</strong>
+            <div class="code-block">number       : Phone number (e.g., 917201000220 or 7201000220)
+type         : Message type (default: text)
+message      : Your message text (URL encoded)
+instance_id  : 688C218ABF0A1 (Authentication)
+access_token : 685694fd67a5b (Authentication)</div>
 
-            <strong>Request Body:</strong>
-            <div class="code-block">{
-                "number": "+917201000220",
-                "message": "Your message here"
-                }</div>
+            <strong>Example URL:</strong>
+            <div class="code-block">http://localhost:3000/api/send?number=917201000220&type=text&message=Hello+World&instance_id=688C218ABF0A1&access_token=685694fd67a5b</div>
 
             <strong>Example cURL:</strong>
-            <div class="code-block">curl -X POST http://localhost:3000/api/send-message \
-                -H "Content-Type: application/json" \
-                -d '{
-                "number": "+917201000220",
-                "message": "Hello from API!"
-                }'</div>
+            <div class="code-block">curl "http://localhost:3000/api/send?number=917201000220&type=text&message=Hello+from+API&instance_id=688C218ABF0A1&access_token=685694fd67a5b"</div>
 
             <strong>Response (Success):</strong>
             <div class="code-block">{
-                "success": true,
-                "message": "Message sent successfully",
-                "to": "+917201000220"
-                }</div>
+  "success": true,
+  "message": "Message sent successfully",
+  "to": "917201000220",
+  "type": "text"
+}</div>
+
+            <strong>Response (Error):</strong>
+            <div class="code-block">{
+  "success": false,
+  "error": "Error description"
+}</div>
+
+            <strong>Alternative POST Endpoint:</strong>
+            <div class="code-block">POST http://localhost:3000/api/send-message
+Headers: Content-Type: application/json
+Body: {"number": "+917201000220", "message": "Your message"}</div>
+
+            <strong>Authentication:</strong>
+            <p style="color: var(--text-secondary); margin: 1rem 0;">
+                Change instance_id and access_token in server.js or use environment variables (.env file)
+            </p>
         </div>
     </div>
 
